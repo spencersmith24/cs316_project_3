@@ -2,42 +2,50 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.time.LocalDateTime;
 
 public class Server {
-
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
-            System.out.println("Syntax: Server <serverPort>");
+            System.out.println("Please specify server port.");
+            return;
         }
         int port = Integer.parseInt(args[0]);
 
-        // listenChannel always listens for connection requests from clients
-        // performs three-way handshake with new clients
-        ServerSocketChannel listenChannel = ServerSocketChannel.open();
-        listenChannel.bind(new InetSocketAddress(port));
-
+        ServerSocketChannel welcomeChannel = ServerSocketChannel.open();
+        welcomeChannel.socket().bind(new InetSocketAddress(port));
 
         while (true) {
-            // serveChannel serves the client
-            SocketChannel serveChannel = listenChannel.accept();
+            SocketChannel serveChannel = welcomeChannel.accept();
+            ByteBuffer request = ByteBuffer.allocate(1000);
+            int numBytes = serveChannel.read(request);
 
-            ByteBuffer clientQueryBuffer = ByteBuffer.allocate(1024);
+            request.flip();
+            //find out what command is in this request
+            String command;
 
-            // read from network and write to buffer
-            int bytesRead = serveChannel.read(clientQueryBuffer);
-            // flip is required between write and read
-            clientQueryBuffer.flip();
-
-            // read data from buffer
-            byte[] clientQueryArray = new byte[bytesRead];
-            clientQueryBuffer.get(clientQueryArray);
-            String clientQuery = new String(clientQueryArray);
-            System.out.println(clientQuery);
-
-            ByteBuffer replyBuffer = ByteBuffer.wrap(clientQuery.getBytes());
-            serveChannel.write(replyBuffer);
+            switch (command) {
+                case "LIST":
+                    // TODO make list functionality
+                    break;
+                case "DELETE":
+                    // TODO make delete functionality
+                    break;
+                case "RENAME":
+                    // TODO make rename functionality
+                    break;
+                case "DOWNLOAD":
+                    // TODO make download functionality
+                    break;
+                case "UPLOAD":
+                    // TODO make upload functionality
+                    break;
+                default:
+                    if (!command.equals("0")) {
+                        System.out.println("Invalid command");
+                    }
+            }
             serveChannel.close();
+            
         }
     }
 }
