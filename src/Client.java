@@ -1,7 +1,7 @@
-
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.Locale;
 import java.util.Scanner;
 
 public class Client {
@@ -14,25 +14,34 @@ public class Client {
         }
         int serverPort = Integer.parseInt(args[1]);
 
-        // "GetTime", "GetDate"
-        Scanner keyboard = new Scanner(System.in);
-        String message = keyboard.nextLine();
 
-        ByteBuffer queryBuffer = ByteBuffer.wrap(message.getBytes());
+        String command;
+        do {
+            System.out.println("Input a command\n1) List - list all files\n2) Delete - remove a file\n3) Rename - rename a file\n4) Download - download a file\n5) Upload - upload a file\n");
+            Scanner keyboard = new Scanner(System.in);
+            command = keyboard.nextLine().toUpperCase(Locale.ROOT);
+            switch (command) {
+                case "LIST":
+                    // TODO make list functionality
+                    break;
+                case "DELETE":
+                    // TODO make delete functionality
+                    break;
+                case "RENAME":
+                    // TODO make rename functionality
+                    break;
+                case "DOWNLOAD":
+                    // TODO make download functionality
+                    break;
+                case "UPLOAD":
+                    // TODO make upload functionality
+                    break;
+                default:
+                    if (!command.equals("0")) {
+                        System.out.println("Invalid command");
+                    }
+            }
+        } while (command.equals("q") || command.equals("quit"));
 
-        SocketChannel channel = SocketChannel.open();
-        channel.connect(new InetSocketAddress(args[0], serverPort));
-        channel.write(queryBuffer);
-
-        ByteBuffer replyBuffer = ByteBuffer.allocate(1024);
-        int bytesRead = channel.read(replyBuffer);
-
-        replyBuffer.flip();
-
-        byte[] replyArray = new byte[bytesRead];
-        replyBuffer.get(replyArray);
-        System.out.println(new String(replyArray));
-
-        channel.close();
     }
 }
