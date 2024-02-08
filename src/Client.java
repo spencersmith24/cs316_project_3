@@ -37,7 +37,13 @@ public class Client {
                     channel.close();
                     break;
                 case "D":
-                    // TODO make delete functionality
+                    System.out.println("Please enter the name of the file you would like to delete:\n");
+                    String fileName = keyboard.nextLine();
+                    command += fileName;
+
+                    commandBuffer = ByteBuffer.wrap(command.getBytes());
+                    channel = SocketChannel.open();
+                    sendRequest(channel, args, serverPort, commandBuffer);
                     break;
                 case "R":
                     // TODO make rename functionality
