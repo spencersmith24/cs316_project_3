@@ -27,26 +27,44 @@ public class Client {
                     "5) U - upload a file");
 
             command = keyboard.nextLine().toUpperCase();
+            String fileName;
 
             switch (command) {
                 case "L":
                     ByteBuffer commandBuffer = ByteBuffer.wrap(command.getBytes());
                     SocketChannel channel = SocketChannel.open();
                     sendRequest(channel, args, serverPort, commandBuffer);
+
                     displayReply(channel);
                     channel.close();
                     break;
                 case "D":
                     System.out.println("Please enter the name of the file you would like to delete:\n");
-                    String fileName = keyboard.nextLine();
+                    fileName = keyboard.nextLine();
                     command += fileName;
 
                     commandBuffer = ByteBuffer.wrap(command.getBytes());
                     channel = SocketChannel.open();
                     sendRequest(channel, args, serverPort, commandBuffer);
+
+                    displayReply(channel);
+                    channel.close();
                     break;
                 case "R":
-                    // TODO make rename functionality
+                    System.out.println("Please enter the name of the file you would like to rename:\n");
+                    fileName = keyboard.nextLine();
+                    command += fileName;
+
+                    System.out.println("Please enter the new name for the file:\n");
+                    String newFileName = keyboard.nextLine();
+                    command += ":" + newFileName;
+
+                    commandBuffer = ByteBuffer.wrap(command.getBytes());
+                    channel = SocketChannel.open();
+                    sendRequest(channel, args, serverPort, commandBuffer);
+
+                    displayReply(channel);
+                    channel.close();
                     break;
                 case "G":
                     // TODO make download functionality
