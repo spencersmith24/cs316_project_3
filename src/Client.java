@@ -54,6 +54,17 @@ public class Client {
                     System.out.println("Please enter the name of the file you would like to rename:\n");
                     fileName = keyboard.nextLine();
                     command += fileName;
+
+                    System.out.println("Please enter the new name for the file:\n");
+                    String newFileName = keyboard.nextLine();
+                    command += ":" + newFileName;
+
+                    commandBuffer = ByteBuffer.wrap(command.getBytes());
+                    channel = SocketChannel.open();
+                    sendRequest(channel, args, serverPort, commandBuffer);
+
+                    displayReply(channel);
+                    channel.close();
                     break;
                 case "G":
                     // TODO make download functionality
