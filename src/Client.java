@@ -33,6 +33,7 @@ public class Client {
                     ByteBuffer commandBuffer = ByteBuffer.wrap(command.getBytes());
                     SocketChannel channel = SocketChannel.open();
                     sendRequest(channel, args, serverPort, commandBuffer);
+
                     displayReply(channel);
                     channel.close();
                     break;
@@ -44,6 +45,9 @@ public class Client {
                     commandBuffer = ByteBuffer.wrap(command.getBytes());
                     channel = SocketChannel.open();
                     sendRequest(channel, args, serverPort, commandBuffer);
+
+                    displayReply(channel);
+                    channel.close();
                     break;
                 case "R":
                     // TODO make rename functionality
