@@ -27,6 +27,7 @@ public class Client {
                     "5) U - upload a file");
 
             command = keyboard.nextLine().toUpperCase();
+            String fileName;
 
             switch (command) {
                 case "L":
@@ -39,7 +40,7 @@ public class Client {
                     break;
                 case "D":
                     System.out.println("Please enter the name of the file you would like to delete:\n");
-                    String fileName = keyboard.nextLine();
+                    fileName = keyboard.nextLine();
                     command += fileName;
 
                     commandBuffer = ByteBuffer.wrap(command.getBytes());
@@ -50,7 +51,9 @@ public class Client {
                     channel.close();
                     break;
                 case "R":
-                    // TODO make rename functionality
+                    System.out.println("Please enter the name of the file you would like to rename:\n");
+                    fileName = keyboard.nextLine();
+                    command += fileName;
                     break;
                 case "G":
                     // TODO make download functionality
