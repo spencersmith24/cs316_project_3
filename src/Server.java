@@ -6,6 +6,8 @@ import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Locale;
 
+import static java.lang.String.format;
+
 public class Server {
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
@@ -32,12 +34,15 @@ public class Server {
 
             File directoryPath = new File("src/files");
 
+            String selectedFile = "";
+            File f;
+
             switch (commandChar) {
                 case "L":
                     String contents[] = directoryPath.list();
                     String returnString = "";
                     for (int i = 0; i < contents.length; i++) {
-                        returnString += String.format("%d) %s\n", (i + 1), contents[i]);
+                        returnString += format("%d) %s\n", (i + 1), contents[i]);
                     }
                     if (returnString.equals("")) {
                         reply = ByteBuffer.wrap("No files found".getBytes());
@@ -49,8 +54,8 @@ public class Server {
 
                     break;
                 case "D":
-                    String selectedFile = command.substring(1);
-                    File f = new File(directoryPath + "/" + selectedFile);
+                    selectedFile = command.substring(1);
+                    f = new File(directoryPath + "/" + selectedFile);
                     if (!f.delete()) {
                         reply = ByteBuffer.wrap("Couldn't find that file".getBytes());
                         serveChannel.write(reply);
@@ -60,7 +65,20 @@ public class Server {
                     }
                     break;
                 case "R":
-                    // TODO make rename functionality
+                    int colon1Index = command.indexOf(':');
+                    selectedFile = command.substring(1, colon1Index);
+                    String newFileName = command.substring(colon1Index + 1);
+                    f = new File(directoryPath + "/" + selectedFile);
+                    File renamedFile = new File(directoryPath + "/" + newFileName);
+                    if (f.renameTo(renamedFile)) {
+                        String returnMessage = String.format("Renamed %s to %s", selectedFile, newFileName);
+                        reply = ByteBuffer.wrap(returnMessage.getBytes());
+                        serveChannel.write(reply);
+                    } else {
+                        String returnMessage = String.format("Could not rename %s to %s", selectedFile, newFileName);
+                        reply = ByteBuffer.wrap(returnMessage.getBytes());
+                        serveChannel.write(reply);
+                    }
                     break;
                 case "G":
                     // TODO make download functionality
