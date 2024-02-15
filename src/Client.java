@@ -96,9 +96,22 @@ public class Client {
 
                     break;
                 case "U":
+                    System.out.println("Please enter the name of the file you would like to rename:\n");
+                    fileName = keyboard.nextLine();
+                    command += fileName;
+
+                    System.out.println("Please enter the new name for the file:\n");
+                    String uploadedFileName = keyboard.nextLine();
+                    command += ":" + uploadedFileName;
+
+                    commandBuffer = ByteBuffer.wrap(command.getBytes());
+                    channel = SocketChannel.open();
+                    sendRequest(channel, args, serverPort, commandBuffer);
+
                     // TODO make upload functionality
 
-
+                    System.out.println(new String(displayReply(channel)));
+                    channel.close();
                     break;
                 default:
                     if (!command.equals("0")) {
