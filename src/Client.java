@@ -1,7 +1,12 @@
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Scanner;
 
@@ -35,7 +40,7 @@ public class Client {
                     SocketChannel channel = SocketChannel.open();
                     sendRequest(channel, args, serverPort, commandBuffer);
 
-                    displayReply(channel);
+                    System.out.println(new String(displayReply(channel)));
                     channel.close();
                     break;
                 case "D":
@@ -47,7 +52,7 @@ public class Client {
                     channel = SocketChannel.open();
                     sendRequest(channel, args, serverPort, commandBuffer);
 
-                    displayReply(channel);
+                    System.out.println(new String(displayReply(channel)));
                     channel.close();
                     break;
                 case "R":
@@ -63,14 +68,37 @@ public class Client {
                     channel = SocketChannel.open();
                     sendRequest(channel, args, serverPort, commandBuffer);
 
-                    displayReply(channel);
+                    System.out.println(new String(displayReply(channel)));
                     channel.close();
                     break;
                 case "G":
-                    // TODO make download functionality
+                    System.out.println("Please enter the name of the file you would like to download:\n");
+                    fileName = keyboard.nextLine();
+                    command += fileName;
+
+                    commandBuffer = ByteBuffer.wrap(command.getBytes());
+                    channel = SocketChannel.open();
+                    sendRequest(channel, args, serverPort, commandBuffer);
+
+                    FileOutputStream newFileStream = new FileOutputStream(System.getProperty("user.home") + "/Downloads/" + fileName, true);
+                    FileChannel fc = newFileStream.getChannel();
+
+                    ByteBuffer content = ByteBuffer.allocate(1024);
+
+                    while (channel.read(content) >= 0) {
+                        content.flip();
+                        fc.write(content);
+                        content.clear();
+                    }
+
+                    newFileStream.close();
+                    channel.close();
+
                     break;
                 case "U":
                     // TODO make upload functionality
+
+
                     break;
                 default:
                     if (!command.equals("0")) {
@@ -87,15 +115,15 @@ public class Client {
     }
 
 
-    private static void displayReply(SocketChannel channel) throws IOException {
+    // TODO: put a loop in here so it does stuff until bytesRead == -1
+    private static byte[] displayReply(SocketChannel channel) throws IOException {
         ByteBuffer replyBuffer = ByteBuffer.allocate(1024);
         int bytesRead = channel.read(replyBuffer);
 
         replyBuffer.flip();
-
         byte[] replyArray = new byte[bytesRead];
-
         replyBuffer.get(replyArray);
-        System.out.println(new String(replyArray));
+
+        return replyArray;
     }
 }

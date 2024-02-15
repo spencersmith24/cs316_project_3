@@ -1,8 +1,9 @@
-import java.io.File;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.*;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 
@@ -81,18 +82,32 @@ public class Server {
                     }
                     break;
                 case "G":
-                    // TODO make download functionality
+                    selectedFile = command.substring(1);
+                    FileInputStream fs = new FileInputStream(directoryPath + "/" + selectedFile);
+                    FileChannel fc = fs.getChannel();
+                    int bufferSize = 1024;
+                    if (bufferSize > fc.size()) {
+                        bufferSize = (int) fc.size();
+                    }
+                    ByteBuffer content = ByteBuffer.allocate(bufferSize);
+                    while (fc.read(content) >= 0) {
+                        content.flip();
+                        serveChannel.write(content);
+                        content.clear();
+                    }
+                    serveChannel.shutdownOutput();
                     break;
+
                 case "U":
                     // TODO make upload functionality
+
                     break;
                 default:
                     if (!command.equals("0")) {
                         System.out.println("Invalid command");
                     }
+                    serveChannel.close();
             }
-            serveChannel.close();
-
         }
     }
 }
