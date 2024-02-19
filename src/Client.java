@@ -1,43 +1,42 @@
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
-import java.util.Locale;
 import java.util.Scanner;
 
 public class Client {
-
     public static void main(String[] args) throws Exception {
+
+        String command;
+        String fileName;
+        ByteBuffer commandBuffer;
+        FileChannel fc;
+        SocketChannel channel;
+
         // expect two command-line args from user
         if (args.length != 2) {
             System.out.println("Syntax: Client <serverIP> <serverPort>");
             return;
         }
         int serverPort = Integer.parseInt(args[1]);
-
-
         Scanner keyboard = new Scanner(System.in);
-        String command;
+
         do {
-            System.out.println("Input a command\n" +
-                    "1) L - list all files\n" +
-                    "2) D - remove a file\n" +
-                    "3) R - rename a file\n" +
-                    "4) G - download a file\n" +
-                    "5) U - upload a file");
+            System.out.println("""
+                    Input a command
+                    1) L - list all files
+                    2) D - remove a file
+                    3) R - rename a file
+                    4) G - download a file
+                    5) U - upload a file""");
 
             command = keyboard.nextLine().toUpperCase();
-            String fileName;
 
             switch (command) {
                 case "L":
-                    ByteBuffer commandBuffer = ByteBuffer.wrap(command.getBytes());
-                    SocketChannel channel = SocketChannel.open();
+                    commandBuffer = ByteBuffer.wrap(command.getBytes());
+                    channel = SocketChannel.open();
                     sendRequest(channel, args, serverPort, commandBuffer);
 
                     System.out.println(new String(displayReply(channel)));
@@ -81,7 +80,7 @@ public class Client {
                     sendRequest(channel, args, serverPort, commandBuffer);
 
                     FileOutputStream newFileStream = new FileOutputStream(System.getProperty("user.home") + "/Downloads/" + fileName, true);
-                    FileChannel fc = newFileStream.getChannel();
+                    fc = newFileStream.getChannel();
 
                     ByteBuffer content = ByteBuffer.allocate(1024);
 
@@ -96,22 +95,34 @@ public class Client {
 
                     break;
                 case "U":
-                    System.out.println("Please enter the name of the file you would like to rename:\n");
+                    System.out.println("Please enter the name of the file you want to upload:\n");
                     fileName = keyboard.nextLine();
                     command += fileName;
-
-                    System.out.println("Please enter the new name for the file:\n");
-                    String uploadedFileName = keyboard.nextLine();
-                    command += ":" + uploadedFileName;
 
                     commandBuffer = ByteBuffer.wrap(command.getBytes());
                     channel = SocketChannel.open();
                     sendRequest(channel, args, serverPort, commandBuffer);
 
-                    // TODO make upload functionality
+                    if (new String(displayReply(channel)).equals("ready for file content")) {
+                        FileInputStream fs = new FileInputStream("src/files" + "/" + fileName);
+                        fc = fs.getChannel();
+                        int bufferSize = 1024;
+                        if (bufferSize > fc.size()) {
+                            bufferSize = (int) fc.size();
+                        }
 
-                    System.out.println(new String(displayReply(channel)));
-                    channel.close();
+                        ByteBuffer fileContent = ByteBuffer.allocate(bufferSize);
+                        while (fc.read(fileContent) >= 0) {
+                            channel.write(fileContent.flip());
+                            fileContent.clear();
+                        }
+                        channel.shutdownOutput();
+
+//                    System.out.println(new String(displayReply(channel)));
+                        channel.close();
+                    }
+
+
                     break;
                 default:
                     if (!command.equals("0")) {
@@ -127,8 +138,6 @@ public class Client {
         channel.write(queryBuffer);
     }
 
-
-    // TODO: put a loop in here so it does stuff until bytesRead == -1
     private static byte[] displayReply(SocketChannel channel) throws IOException {
         ByteBuffer replyBuffer = ByteBuffer.allocate(1024);
         int bytesRead = channel.read(replyBuffer);
