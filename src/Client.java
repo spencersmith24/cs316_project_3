@@ -79,58 +79,65 @@ public class Client {
                     channel = SocketChannel.open();
                     sendRequest(channel, args, serverPort, commandBuffer);
 
-                    FileOutputStream newFileStream = new FileOutputStream(System.getProperty("user.home") + "/Downloads/" + fileName, true);
-                    fc = newFileStream.getChannel();
+                    if (new String(displayReply(channel)).equals("Could not find requested file")) {
+                        System.out.println("Could not find requested file.");
+                    } else {
+                        FileOutputStream newFileStream = new FileOutputStream(System.getProperty("user.home") + "/Downloads/" + fileName, true);
+                        fc = newFileStream.getChannel();
 
-                    ByteBuffer content = ByteBuffer.allocate(1024);
+                        ByteBuffer content = ByteBuffer.allocate(1024);
 
-                    while (channel.read(content) >= 0) {
-                        content.flip();
-                        fc.write(content);
-                        content.clear();
+                        while (channel.read(content) >= 0) {
+                            content.flip();
+                            fc.write(content);
+                            content.clear();
+                        }
+                        newFileStream.close();
+
+                        System.out.println("File downloaded successfully.");
                     }
-
-                    newFileStream.close();
                     channel.close();
-
                     break;
                 case "U":
                     System.out.println("Please enter the name of the file you want to upload:\n");
                     fileName = keyboard.nextLine();
-                    command += fileName;
+                    File f = new File("src/files/" + fileName);
+                    if (f.exists()) {
+                        command += fileName;
 
-                    commandBuffer = ByteBuffer.wrap(command.getBytes());
-                    channel = SocketChannel.open();
-                    sendRequest(channel, args, serverPort, commandBuffer);
+                        commandBuffer = ByteBuffer.wrap(command.getBytes());
+                        channel = SocketChannel.open();
+                        sendRequest(channel, args, serverPort, commandBuffer);
 
-                    if (new String(displayReply(channel)).equals("ready for file content")) {
-                        FileInputStream fs = new FileInputStream("src/files" + "/" + fileName);
-                        fc = fs.getChannel();
-                        int bufferSize = 1024;
-                        if (bufferSize > fc.size()) {
-                            bufferSize = (int) fc.size();
+                        if (new String(displayReply(channel)).equals("ready for file content")) {
+
+                            FileInputStream fs = new FileInputStream(f);
+                            fc = fs.getChannel();
+                            int bufferSize = 1024;
+                            if (bufferSize > fc.size()) {
+                                bufferSize = (int) fc.size();
+                            }
+
+                            ByteBuffer fileContent = ByteBuffer.allocate(bufferSize);
+                            while (fc.read(fileContent) >= 0) {
+                                channel.write(fileContent.flip());
+                                fileContent.clear();
+                            }
+                            channel.shutdownOutput();
+                            channel.close();
+                            System.out.println("File successfully uploaded");
                         }
-
-                        ByteBuffer fileContent = ByteBuffer.allocate(bufferSize);
-                        while (fc.read(fileContent) >= 0) {
-                            channel.write(fileContent.flip());
-                            fileContent.clear();
-                        }
-                        channel.shutdownOutput();
-
-//                    System.out.println(new String(displayReply(channel)));
-                        channel.close();
+                    } else {
+                        System.out.println("File not in current directory");
                     }
-
-
                     break;
+
                 default:
                     if (!command.equals("0")) {
                         System.out.println("Invalid command");
                     }
             }
         } while (command.equals("q") || command.equals("quit"));
-
     }
 
     private static void sendRequest(SocketChannel channel, String[] args, int serverPort, ByteBuffer queryBuffer) throws IOException {
