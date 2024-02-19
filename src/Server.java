@@ -1,11 +1,7 @@
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.*;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Locale;
 
 import static java.lang.String.format;
 
@@ -23,7 +19,7 @@ public class Server {
         while (true) {
             SocketChannel serveChannel = welcomeChannel.accept();
             ByteBuffer request = ByteBuffer.allocate(1024);
-            ByteBuffer reply = ByteBuffer.allocate(1024);
+            ByteBuffer reply;
             int numBytes = serveChannel.read(request);
 
             request.flip();
@@ -35,7 +31,7 @@ public class Server {
 
             File directoryPath = new File("src/files");
 
-            String selectedFile = "";
+            String selectedFile;
             File f;
 
             switch (commandChar) {
@@ -99,8 +95,21 @@ public class Server {
                     break;
 
                 case "U":
-                    // TODO make upload functionality
+                    selectedFile = command.substring(1);
+                    FileOutputStream fo = new FileOutputStream(directoryPath + "/" + selectedFile, true);
+                    fc = fo.getChannel();
 
+                    serveChannel.write(ByteBuffer.wrap("ready for file content".getBytes()));
+
+                    ByteBuffer newFileContent = ByteBuffer.allocate(1024);
+
+                    while (serveChannel.read(newFileContent) >= 0) {
+                        newFileContent.flip();
+                        fc.write(newFileContent);
+                        newFileContent.clear();
+                    }
+                    fo.close();
+                    serveChannel.close();
                     break;
                 default:
                     if (!command.equals("0")) {
