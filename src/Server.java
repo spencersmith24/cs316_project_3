@@ -16,10 +16,14 @@ public class Server {
         ServerSocketChannel welcomeChannel = ServerSocketChannel.open();
         welcomeChannel.socket().bind(new InetSocketAddress(port));
 
+        ByteBuffer reply;
+        String selectedFile;
+        File f;
+        File directoryPath = new File("src/files");
+
         while (true) {
             SocketChannel serveChannel = welcomeChannel.accept();
             ByteBuffer request = ByteBuffer.allocate(1024);
-            ByteBuffer reply;
             int numBytes = serveChannel.read(request);
 
             request.flip();
@@ -28,11 +32,6 @@ public class Server {
             request.get(clientQueryArray);
             String command = new String(clientQueryArray);
             String commandChar = command.substring(0, 1).toUpperCase();
-
-            File directoryPath = new File("src/files");
-
-            String selectedFile;
-            File f;
 
             switch (commandChar) {
                 case "L":
@@ -48,7 +47,6 @@ public class Server {
                         reply = ByteBuffer.wrap(returnString.getBytes());
                         serveChannel.write(reply);
                     }
-
                     break;
                 case "D":
                     selectedFile = command.substring(1);
@@ -79,25 +77,28 @@ public class Server {
                     break;
                 case "G":
                     selectedFile = command.substring(1);
-                    FileInputStream fs = new FileInputStream(directoryPath + "/" + selectedFile);
-                    FileChannel fc = fs.getChannel();
-                    int bufferSize = 1024;
-                    if (bufferSize > fc.size()) {
-                        bufferSize = (int) fc.size();
-                    }
-                    ByteBuffer content = ByteBuffer.allocate(bufferSize);
-                    while (fc.read(content) >= 0) {
-                        content.flip();
-                        serveChannel.write(content);
-                        content.clear();
-                    }
-                    serveChannel.shutdownOutput();
-                    break;
+                    f = new File(directoryPath + "/" + selectedFile);
 
+                    if (!f.exists()) {
+                        serveChannel.write(ByteBuffer.wrap(("Could not find requested file").getBytes()));
+                        serveChannel.close();
+                    } else {
+                        FileInputStream fs = new FileInputStream(directoryPath + "/" + selectedFile);
+                        FileChannel fc = fs.getChannel();
+                        int bufferSize = 1024;
+                        ByteBuffer content = ByteBuffer.allocate(bufferSize);
+                        while (fc.read(content) >= 0) {
+                            content.flip();
+                            serveChannel.write(content);
+                            content.clear();
+                        }
+                        serveChannel.shutdownOutput();
+                    }
+                    break;
                 case "U":
                     selectedFile = command.substring(1);
                     FileOutputStream fo = new FileOutputStream(directoryPath + "/" + selectedFile, true);
-                    fc = fo.getChannel();
+                    FileChannel fc = fo.getChannel();
 
                     serveChannel.write(ByteBuffer.wrap("ready for file content".getBytes()));
 
