@@ -79,7 +79,7 @@ public class Client {
                     channel = SocketChannel.open();
                     sendRequest(channel, args, serverPort, commandBuffer);
 
-                    if (new String(displayReply(channel)).equals("Could not find requested file")) {
+                    if (new String(displayReply(channel)).equals("F")) {
                         System.out.println("Could not find requested file.");
                     } else {
                         FileOutputStream newFileStream = new FileOutputStream(System.getProperty("user.home") + "/Downloads/" + fileName, true);
@@ -109,7 +109,7 @@ public class Client {
                         channel = SocketChannel.open();
                         sendRequest(channel, args, serverPort, commandBuffer);
 
-                        if (new String(displayReply(channel)).equals("ready for file content")) {
+                        if (new String(displayReply(channel)).equals("S")) {
 
                             FileInputStream fs = new FileInputStream(f);
                             fc = fs.getChannel();
