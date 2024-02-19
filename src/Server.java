@@ -80,7 +80,7 @@ public class Server {
                     f = new File(directoryPath + "/" + selectedFile);
 
                     if (!f.exists()) {
-                        serveChannel.write(ByteBuffer.wrap(("Could not find requested file").getBytes()));
+                        serveChannel.write(ByteBuffer.wrap(("F").getBytes()));
                         serveChannel.close();
                     } else {
                         FileInputStream fs = new FileInputStream(directoryPath + "/" + selectedFile);
@@ -100,7 +100,7 @@ public class Server {
                     FileOutputStream fo = new FileOutputStream(directoryPath + "/" + selectedFile, true);
                     FileChannel fc = fo.getChannel();
 
-                    serveChannel.write(ByteBuffer.wrap("ready for file content".getBytes()));
+                    serveChannel.write(ByteBuffer.wrap("S".getBytes()));
 
                     ByteBuffer newFileContent = ByteBuffer.allocate(1024);
 
