@@ -83,16 +83,28 @@ public class Server {
                         serveChannel.write(ByteBuffer.wrap(("F").getBytes()));
                         serveChannel.close();
                     } else {
-                        FileInputStream fs = new FileInputStream(directoryPath + "/" + selectedFile);
-                        FileChannel fc = fs.getChannel();
-                        int bufferSize = 1024;
-                        ByteBuffer content = ByteBuffer.allocate(bufferSize);
-                        while (fc.read(content) >= 0) {
-                            content.flip();
-                            serveChannel.write(content);
-                            content.clear();
+                        serveChannel.write(ByteBuffer.wrap(("S").getBytes()));
+
+                        // check to see if client is ready to receive file
+                        ByteBuffer responseBuffer = ByteBuffer.allocate(1);
+                        serveChannel.read(responseBuffer);
+
+                        responseBuffer.flip();
+                        byte[] responseArray = new byte[1];
+                        responseBuffer.get(responseArray);
+                        if (new String(responseArray).equals("R")) {
+
+                            FileInputStream fs = new FileInputStream(directoryPath + "/" + selectedFile);
+                            FileChannel fc = fs.getChannel();
+                            int bufferSize = 1024;
+                            ByteBuffer content = ByteBuffer.allocate(bufferSize);
+                            while (fc.read(content) >= 0) {
+                                content.flip();
+                                serveChannel.write(content);
+                                content.clear();
+                            }
+                            serveChannel.shutdownOutput();
                         }
-                        serveChannel.shutdownOutput();
                     }
                     break;
                 case "U":
