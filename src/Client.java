@@ -1,4 +1,7 @@
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -6,22 +9,18 @@ import java.nio.channels.SocketChannel;
 import java.util.Scanner;
 
 public class Client {
+
     public static void main(String[] args) throws Exception {
-
-        String command;
-        String fileName;
-        ByteBuffer commandBuffer;
-        FileChannel fc;
-        SocketChannel channel;
-
         // expect two command-line args from user
         if (args.length != 2) {
             System.out.println("Syntax: Client <serverIP> <serverPort>");
             return;
         }
         int serverPort = Integer.parseInt(args[1]);
-        Scanner keyboard = new Scanner(System.in);
 
+
+        Scanner keyboard = new Scanner(System.in);
+        String command;
         do {
             System.out.println("""
                     Input a command
@@ -32,6 +31,10 @@ public class Client {
                     5) U - upload a file""");
 
             command = keyboard.nextLine().toUpperCase();
+            String fileName;
+            ByteBuffer commandBuffer;
+            SocketChannel channel;
+            FileChannel fc;
 
             switch (command) {
                 case "L":
@@ -79,10 +82,11 @@ public class Client {
                     channel = SocketChannel.open();
                     sendRequest(channel, args, serverPort, commandBuffer);
 
-                    if (new String(displayReply(channel)).equals("F")) {
-                        System.out.println("Could not find requested file.");
+                    if(new String(displayReply(channel)).equals("F")){
+                        System.out.println("Could not find that file.");
                     } else {
-                        FileOutputStream newFileStream = new FileOutputStream(System.getProperty("user.home") + "/Downloads/" + fileName, true);
+                        channel.write(ByteBuffer.wrap("R".getBytes()));
+                        FileOutputStream newFileStream = new FileOutputStream("src/files/" + fileName, true);
                         fc = newFileStream.getChannel();
 
                         ByteBuffer content = ByteBuffer.allocate(1024);
@@ -92,10 +96,11 @@ public class Client {
                             fc.write(content);
                             content.clear();
                         }
-                        newFileStream.close();
 
-                        System.out.println("File downloaded successfully.");
+                        newFileStream.close();
+                        System.out.println("File successfully downloaded!");
                     }
+
                     channel.close();
                     break;
                 case "U":
@@ -131,19 +136,20 @@ public class Client {
                         System.out.println("File not in current directory");
                     }
                     break;
-
                 default:
                     if (!command.equals("0")) {
                         System.out.println("Invalid command");
                     }
             }
         } while (command.equals("q") || command.equals("quit"));
+
     }
 
     private static void sendRequest(SocketChannel channel, String[] args, int serverPort, ByteBuffer queryBuffer) throws IOException {
         channel.connect(new InetSocketAddress(args[0], serverPort));
         channel.write(queryBuffer);
     }
+
 
     private static byte[] displayReply(SocketChannel channel) throws IOException {
         ByteBuffer replyBuffer = ByteBuffer.allocate(1024);
