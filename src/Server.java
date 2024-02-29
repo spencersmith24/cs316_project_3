@@ -51,7 +51,7 @@ public class Server {
                 case "D":
                     selectedFile = command.substring(1);
                     f = new File(directoryPath + "/" + selectedFile);
-                    if (!f.delete()) {
+                    if (f.exists() && !f.delete()) {
                         reply = ByteBuffer.wrap("Couldn't find that file".getBytes());
                         serveChannel.write(reply);
                     } else {
@@ -103,6 +103,7 @@ public class Server {
                                 serveChannel.write(content);
                                 content.clear();
                             }
+                            fs.close();
                             serveChannel.shutdownOutput();
                         }
                     }
